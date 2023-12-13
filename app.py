@@ -7,7 +7,7 @@ from datetime import datetime
 df = pd.read_csv('processed_data.csv')
 
 # Convert 'Date' column to datetime
-df['Date'] = pd.to_datetime(df['Date'])
+df['Date'] = pd.to_datetime(df['Date']).dt.date
 
 # Streamlit dashboard layout
 st.title('新聞標題分析 Dashboard')
