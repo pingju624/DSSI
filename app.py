@@ -16,17 +16,13 @@ st.set_page_config(
 # custom_theme = """
 # [theme]
 # base="dark"
-# primaryColor="#b04bff"
 # """
 
 @st.cache_data
 def GetProcessedData(file):
     df = pd.read_csv(file)
-    # Convert 'Date' column to datetime
-    # df = df.iloc[:,1:]
     del df['Unnamed: 0']
-    # df.set_index('Date', inplace=True)
-    # st.write(df.head())
+    # Convert 'Date' column to datetime
     df['Date'] = pd.to_datetime(df['Date']).dt.date
     df = df[df['Date'] >= date(2017,12,31)]
     df.sort_values(by='Date', inplace=True)
@@ -38,49 +34,65 @@ def SelectDate(df, start_date, end_date):
     return df[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
 
 def PressTimePlot(df, selected_presses):
-    fig = px.line(title='Clickbait Ratio: Press')
-    df_filtered = df[df['Press'].isin(selected_presses)]
-    for press, group in df_filtered.groupby('Press'):
-        # Monthly average
-        Monthly = group.groupby('Date')['IsClickbait'].mean()
-        Monthly.index = pd.to_datetime(Monthly.index)
-        Monthly = Monthly.resample('M').mean()
-        Monthly = Monthly.rolling(4).mean()
-        # fig.add_trace(px.line(Monthly, x=Monthly.index, y=Monthly.values, hover_name=press).data[0])
-        fig.add_trace(px.line(Monthly, x=Monthly.index, y=Monthly.values).data[0])
+    global media_color_map
 
-    fig.update_layout(xaxis_title='Time (Monthly)',yaxis_title='Clickbait Ratio', legend_title='Press')
+    df_filtered = df[df['Press'].isin(selected_presses)]
+    df_filtered['MonthYear'] = df_filtered['Date'].astype(str).str[:7]
+    df_filtered = df_filtered.groupby(['Press', 'MonthYear']).agg({'IsClickbait': 'mean'}).reset_index()
+    fig = px.line(df_filtered, x='MonthYear', y='IsClickbait',
+                  color='Press', color_discrete_map=media_color_map, title='各媒體誘餌式標題比例')
+    fig.update_layout(xaxis_title='Time (Monthly)',yaxis_title='Clickbait Ratio', legend_title='新聞媒體')
     # Customize the layout
     return st.plotly_chart(fig)
 
 def CategoryTimePlot(df, selected_categories):
-    fig = px.line(title='Clickbait Ratio: Category')
+    global category_color_map
+
     df_filtered = df[df['Category'].isin(selected_categories)]
-    for category, group in df_filtered.groupby("Category"):
-        Monthly = group.groupby('Date')['IsClickbait'].mean()
-        Monthly.index = pd.to_datetime(Monthly.index)
-        Monthly = Monthly.resample('M').mean()
-        Monthly = Monthly.rolling(4).mean()
-        fig.add_trace(px.line(Monthly, x=Monthly.index, y=Monthly.values).data[0])
-        # next line cause error
-        # fig.add_trace(px.line(Monthly, x=Monthly.index, y=Monthly.values, name=category, line_dash='dash').data[0])
-    fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Clickbait Ratio', legend_title='Category')
+    df_filtered['MonthYear'] = df_filtered['Date'].astype(str).str[:7]
+    df_filtered = df_filtered.groupby(['Category', 'MonthYear']).agg({'IsClickbait': 'mean'}).reset_index()
+    fig = px.line(df_filtered, x='MonthYear', y='IsClickbait',
+                  color='Category', color_discrete_map=category_color_map, title='各類別新聞誘餌式比例')
+    fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Clickbait Ratio', legend_title='新聞類別')
+    return st.plotly_chart(fig)
+
+def BaitMethodTimePlot(df, selected_baits):
+    global bait_color_map
+
+    df_filtered = df
+    df_filtered['MonthYear'] = df['Date'].astype(str).str[:7]
+    df_filtered = df_filtered.groupby('MonthYear')[selected_baits].mean().reset_index()
+    df_melted = pd.melt(df_filtered, id_vars=['MonthYear'], value_vars=selected_baits, var_name='BaitType', value_name='BaitRatio')
+    fig = px.line(df_melted, x='MonthYear', y='BaitRatio',
+                  color='BaitType', color_discrete_map=bait_color_map, title='各誘餌式方法占全部新聞比例')
+    fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Bait Type Ratio', legend_title='釣魚方法')
     return st.plotly_chart(fig)
 
 # Load the data
 df = GetProcessedData('processed_data.csv')
 
-media_options = df['Press'].unique().tolist()
-Category_options = ['politics','finance','entertainment','health','life','tech','global']
+# 因為會需要用到map，所以直接打出媒體，而非每次計算
+# media_options = df['Press'].unique().tolist()
+media_options = ['ETToday','報導者','今日新聞','TVBS','Storm Media','NewsLens','NewYorkTimes','TTVnews','鏡新聞','壹蘋新聞','三立','中天']
+media_colors = ['#FFABAB','#B7BCC6','#FFD700','#28FF28','#FF0000','#83C9FF','#6D3FC0','#1AFD9C','#00477D','#FFA500','#228B22','#2828FF']
+media_color_map = dict(zip(media_options, media_colors))
+category_options = ['politics','finance','entertainment','health','life','tech','global']
+category_colors = ['#FFFFFF','#FFD700','#FF0000','#FF69B4','#0D33FF','#00CED1','#7FFF00']
+category_color_map = dict(zip(category_options, category_colors))
+bait_options = ['forward-referencing','emotional','interrogative','surprise','ellipsis','list','how_to','interjection','spillthebeans','gossip','ending_words','netizen','exaggerated','uncertainty']
+bait_colors = media_colors + ['#D94DFF', '#FFDAB9']
+bait_color_map = dict(zip(bait_options, bait_colors))
+# st.write(len(bait_colors), len(bait_options), len(media_colors))
 
 def run():
     # Sidebar filters
     with st.sidebar:
         st.header('篩選選項')
-        selected_presses = st.multiselect('選擇媒體', media_options, default=df['Press'].unique())
-        selected_categories = st.multiselect("Select Categories", Category_options, default=df['Category'].unique())
         start_date = st.date_input('開始日期', df['Date'].min())
         end_date = st.date_input('結束日期', df['Date'].max())
+        selected_presses = st.multiselect('選擇媒體', media_options, default=df['Press'].unique())
+        selected_categories = st.multiselect("選擇新聞類別", category_options, default=df['Category'].unique())
+        selected_bait = st.multiselect("選擇釣魚方法", bait_options, default=bait_options)
     st.title('新聞標題分析 Dashboard')
     # Filter data based on selections
     # Since the category,press effect each others, move the selection into plot function
@@ -89,8 +101,8 @@ def run():
     if st.checkbox('顯示篩選後的數據'):
         st.write(filtered_df.head())
 
-    t1, t2 = st.tabs(["Pingru", "Ding"])
-    with t1:
+    tab1, tab2 = st.tabs(["Pingru", "Ding"])
+    with tab1:
         # Create and display charts with responsive layout
         # Bar chart for Clickbait Ratio by Category
         st.header('各類別誘餌式標題比例')
@@ -112,13 +124,11 @@ def run():
         fig_interrogative_category = px.bar(interrogative_titles_by_category, x='Category', y='interrogative', title='各類別詢問性標題比例')
         fig_interrogative_category.update_layout(autosize=True, margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(fig_interrogative_category, use_container_width=True)
-    with t2:
-        st.header('新畫的圖')
-        st.write('遇到問題:無法用plotly.express標註每條線的hover_name,color等資訊。')
-        st.write("ValueError: Value of 'hover_name' is not the name of a column in 'data_frame'. Expected one of ['IsClickbait'] but received: ETToday")
-        st.write('error in line 48, in PressTimePlot')
+    with tab2:
+        st.header('時間序列圖')
         PressTimePlot(filtered_df, selected_presses)
         CategoryTimePlot(filtered_df, selected_categories)
+        BaitMethodTimePlot(filtered_df, selected_bait)
 
 if __name__ == "__main__":
     run()
