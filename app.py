@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from datetime import date
 import numpy as np
 
-# 全域變數
+# 全域變數測試
 # 因為會需要用到map，所以直接打出媒體，而非每次計算
 # media_options = df['Press'].unique().tolist()
 media_options = ['ETToday','報導者','今日新聞','TVBS','Storm Media','NewsLens','NewYorkTimes','TTVnews','鏡新聞','壹蘋新聞','三立','中天']
