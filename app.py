@@ -101,7 +101,7 @@ def run():
     if st.checkbox('顯示篩選後的數據'):
         st.write(filtered_df.head())
 
-    tab1, tab2 = st.tabs(["Pingru", "Ding"])
+    tab1, tab2, tab3 = st.tabs(["Pingru", "Ding", "Iting"])
     with tab1:
         # Create and display charts with responsive layout
         # Bar chart for Clickbait Ratio by Category
@@ -129,6 +129,8 @@ def run():
         PressTimePlot(filtered_df, selected_presses)
         CategoryTimePlot(filtered_df, selected_categories)
         BaitMethodTimePlot(filtered_df, selected_bait)
+    with tab3:
+        st.write('test')
 
 if __name__ == "__main__":
     run()
