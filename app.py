@@ -5,8 +5,19 @@ import plotly.graph_objects as go
 from datetime import date
 import numpy as np
 
-# import matplotlib.pyplot as plt
-# plt.rcParams['font.family'] = 'Microsoft JhengHei'
+# 全域變數
+# 因為會需要用到map，所以直接打出媒體，而非每次計算
+# media_options = df['Press'].unique().tolist()
+media_options = ['ETToday','報導者','今日新聞','TVBS','Storm Media','NewsLens','NewYorkTimes','TTVnews','鏡新聞','壹蘋新聞','三立','中天']
+media_colors = ['#FFABAB','#B7BCC6','#FFD700','#28FF28','#FF0000','#83C9FF','#6D3FC0','#1AFD9C','#00477D','#FFA500','#228B22','#2828FF']
+media_color_map = dict(zip(media_options, media_colors))
+category_options = ['politics','finance','entertainment','health','life','tech','global']
+category_colors = ['#B7BCC6','#FFD700','#FF0000','#FF69B4','#0D33FF','#00CED1','#7FFF00']
+category_color_map = dict(zip(category_options, category_colors))
+bait_options = ['forward-referencing','emotional','interrogative','surprise','ellipsis','list','how_to','interjection','spillthebeans','gossip','ending_words','netizen','exaggerated','uncertainty']
+bait_colors = media_colors + ['#D94DFF', '#FFDAB9']
+bait_color_map = dict(zip(bait_options, bait_colors))
+alpha = 0.4 #移動平均最新資料的權重
 
 st.set_page_config(
     page_title="新聞標題分析: Clickbait",
@@ -14,11 +25,6 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="expanded"
 )
-
-# custom_theme = """
-# [theme]
-# base="dark"
-# """
 
 @st.cache_data
 def GetProcessedData(file):
@@ -35,10 +41,13 @@ def GetProcessedData(file):
 def SelectDate(df, start_date, end_date):
     return df[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
 
-def PressTimePlot(df, selected_presses):
-    global media_color_map
+# Load the data
+df = GetProcessedData('processed_data.csv')
 
-    df_filtered = df[df['Press'].isin(selected_presses)]
+def MediaTimePlot(df, selected_Media):
+    # Use Global Variables: media_color_map, alpha
+
+    df_filtered = df[df['Press'].isin(selected_Media)]
     df_filtered['MonthYear'] = df_filtered['Date'].astype(str).str[:7]
     df_filtered = df_filtered.groupby(['Press', 'MonthYear']).agg({'IsClickbait': 'mean'}).reset_index()
     # 計算每個新聞媒體每個月的平均值
@@ -48,15 +57,12 @@ def PressTimePlot(df, selected_presses):
     fig.update_layout(xaxis_title='Time (Monthly)',yaxis_title='Clickbait Ratio', legend_title='新聞媒體')
     # Customize the layout
     st.plotly_chart(fig)
-    show_more_text = st.checkbox("顯示更多", key="show_more_checkbox")
-    if show_more_text:
-        st.markdown("## **Insight**")
-        st.markdown("在這份資料中，我們發現 **Storm Media** 的釣餌式文章最多。")
-
 
 def CategoryTimePlot(df, selected_categories):
-    global category_color_map
+    # Use Global Variables: category_color_map, alpha
+    # 篩選從2018開始有資料的媒體
     From2018 = ['ETToday', '今日新聞', 'Storm Media', 'NewYorkTimes', 'NewsLens', 'TVBS', '報導者']
+
     df_filtered = df[df['Press'].isin(From2018)]
     df_filtered = df_filtered[df_filtered['Category'].isin(selected_categories)]
     df_filtered['MonthYear'] = df_filtered['Date'].astype(str).str[:7]
@@ -66,13 +72,10 @@ def CategoryTimePlot(df, selected_categories):
                   color='Category', color_discrete_map=category_color_map, title='各類別新聞誘餌式比例')
     fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Clickbait Ratio', legend_title='新聞類別')
     st.plotly_chart(fig)
-    show_more_text = st.checkbox("顯示更多", key="show_more_checkbox2")
-    if show_more_text:
-        st.markdown("## **Insight**")
-        st.markdown("在這份資料中，我們發現 **Storm Media** 的釣餌式文章最多。")
 
 def BaitMethodTimePlot(df, selected_baits):
-    global bait_color_map
+    # Use Global Variables: bait_color_map, alpha
+    # 篩選從2018開始有資料的媒體
     From2018 = ['ETToday', '今日新聞', 'Storm Media', 'NewYorkTimes', 'NewsLens', 'TVBS', '報導者']
 
     df_filtered = df[df['Press'].isin(From2018)]
@@ -85,28 +88,6 @@ def BaitMethodTimePlot(df, selected_baits):
                   color='BaitType', color_discrete_map=bait_color_map, title='各誘餌式方法占全部新聞比例')
     fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Bait Type Ratio', legend_title='釣魚方法')
     st.plotly_chart(fig)
-    show_more_text = st.checkbox("顯示更多", key="show_more_checkbox3")
-    if show_more_text:
-        st.markdown("## **Insight**")
-        st.markdown("在這份資料中，我們發現 **Storm Media** 的釣餌式文章最多。")
-
-# Load the data
-df = GetProcessedData('processed_data.csv')
-
-# 全域變數
-# 因為會需要用到map，所以直接打出媒體，而非每次計算
-# media_options = df['Press'].unique().tolist()
-media_options = ['ETToday','報導者','今日新聞','TVBS','Storm Media','NewsLens','NewYorkTimes','TTVnews','鏡新聞','壹蘋新聞','三立','中天']
-media_colors = ['#FFABAB','#B7BCC6','#FFD700','#28FF28','#FF0000','#83C9FF','#6D3FC0','#1AFD9C','#00477D','#FFA500','#228B22','#2828FF']
-media_color_map = dict(zip(media_options, media_colors))
-category_options = ['politics','finance','entertainment','health','life','tech','global']
-category_colors = ['#B7BCC6','#FFD700','#FF0000','#FF69B4','#0D33FF','#00CED1','#7FFF00']
-category_color_map = dict(zip(category_options, category_colors))
-bait_options = ['forward-referencing','emotional','interrogative','surprise','ellipsis','list','how_to','interjection','spillthebeans','gossip','ending_words','netizen','exaggerated','uncertainty']
-bait_colors = media_colors + ['#D94DFF', '#FFDAB9']
-bait_color_map = dict(zip(bait_options, bait_colors))
-alpha = 0.4 #移動平均最新資料的權重
-# st.write(len(bait_colors), len(bait_options), len(media_colors))
 
 def run():
     # Sidebar filters
@@ -114,16 +95,15 @@ def run():
         st.header('篩選選項')
         start_date = st.date_input('開始日期', df['Date'].min())
         end_date = st.date_input('結束日期', df['Date'].max())
-        selected_presses = st.multiselect('選擇媒體', media_options, default=df['Press'].unique())
+        selected_media = st.multiselect('選擇媒體', media_options, default=df['Press'].unique())
         selected_categories = st.multiselect("選擇新聞類別", category_options, default=df['Category'].unique())
         selected_bait = st.multiselect("選擇釣魚方法", bait_options, default=bait_options)
     st.title('新聞標題分析 Dashboard')
     # Filter data based on selections
-    # Since the category,press effect each others, move the selection into plot function
     filtered_df = SelectDate(df, start_date, end_date)
     st.subheader('篩選日期後的資料格式')
     if st.checkbox('顯示篩選後的數據'):
-        st.write(filtered_df.head())
+        st.write(filtered_df)
 
     tab1, tab2, tab3 = st.tabs(["Pingru", "Ding", "Iting"])
     with tab1:
@@ -151,9 +131,18 @@ def run():
         st.plotly_chart(fig_interrogative_category, use_container_width=True)
     with tab2:
         st.header('時間序列圖')
-        PressTimePlot(filtered_df, selected_presses)
+        MediaTimePlot(filtered_df, selected_media)
+        with st.expander('更多分析'):
+            st.markdown("## **Insight**")
+            st.markdown("在這份資料中，我們發現 **Storm Media** 的釣餌式文章最多。")
         CategoryTimePlot(filtered_df, selected_categories)
+        with st.expander('更多分析'):
+            st.markdown("## **Insight**")
+            st.markdown("在這份資料中，我們發現 **Storm Media** 的釣餌式文章最多。")
         BaitMethodTimePlot(filtered_df, selected_bait)
+        with st.expander('更多分析'):
+            st.markdown("## **Insight**")
+            st.markdown("在這份資料中，我們發現 **Storm Media** 的釣餌式文章最多。")
     with tab3:
         st.write('test')
 
