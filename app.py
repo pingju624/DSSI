@@ -29,11 +29,14 @@ st.set_page_config(
 @st.cache_data
 def GetProcessedData(file):
     df = pd.read_csv(file)
-    del df['Unnamed: 0']
-    # Convert 'Date' column to datetime
-    df['Date'] = pd.to_datetime(df['Date']).dt.date
-    df = df[df['Date'] >= date(2017,12,31)]
-    df.sort_values(by='Date', inplace=True)
+    try:
+        del df['Unnamed: 0']
+        # Convert 'Date' column to datetime
+        df['Date'] = pd.to_datetime(df['Date']).dt.date
+        df = df[df['Date'] > date(2017,12,31)]
+        df.sort_values(by='Date', inplace=True)
+    except:
+        pass
     return df
 
 # select date here
@@ -43,6 +46,7 @@ def SelectDate(df, start_date, end_date):
 
 # Load the data
 df = GetProcessedData('processed_data.csv')
+three_moth_df = GetProcessedData("panel_data_three_month.csv")
 
 def MediaTimePlot(df, selected_Media):
     # Use Global Variables: media_color_map, alpha
@@ -89,6 +93,27 @@ def BaitMethodTimePlot(df, selected_baits):
     fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Bait Type Ratio', legend_title='釣魚方法')
     st.plotly_chart(fig)
 
+#pingju's
+def  media_count(df,selected_Categories,selected_Media):
+    df_filtered = df[df['Press'].isin(selected_Media)]
+    df_filtered = df_filtered[df_filtered['Category'].isin(selected_Categories)]
+    df_filtered["Mean"] = df_filtered["IsClickbait"] / df_filtered["Count_News"]
+    fig_clickbait_category = px.bar(df_filtered, x='Press', y='Count_News', color='Category', title='各類別新聞資料數',labels={'Mean':'Data Count'},barmode='group')
+    fig_clickbait_category.update_layout(autosize=True)
+    # 在 Streamlit 上顯示圖表
+    st.plotly_chart(fig_clickbait_category, use_container_width=True)
+
+def  media_clickbait(df,selected_Categories,selected_Media):
+    df_filtered = df[df['Press'].isin(selected_Media)]
+    df_filtered = df_filtered[df_filtered['Category'].isin(selected_Categories)]
+    df_filtered["Mean"] = df_filtered["IsClickbait"] / df_filtered["Count_News"]
+    # df_filtered['Category'] = pd.Categorical(df_filtered['Category'], categories=category_order, ordered=True)
+    # fig_clickbait_category = px.bar(df_filtered, x='Press', y='Mean', color='Category',color_discrete_map=category_color_map, title='各類別誘餌式標題比例',labels={'Mean':'Click bait ratio'},barmode='group')
+    fig_clickbait_category = px.bar(df_filtered, x='Press', y='Mean', color='Category', title='各類別誘餌式標題比例',labels={'Mean':'Click bait ratio'},barmode='group')
+    fig_clickbait_category.update_layout(autosize=True)
+    # 在 Streamlit 上顯示圖表
+    st.plotly_chart(fig_clickbait_category, use_container_width=True)
+
 def run():
     # Sidebar filters
     with st.sidebar:
@@ -107,28 +132,11 @@ def run():
 
     tab1, tab2, tab3 = st.tabs(["Pingru", "Ding", "Iting"])
     with tab1:
-        # Create and display charts with responsive layout
-        # Bar chart for Clickbait Ratio by Category
+        st.header('各類別新聞資料數')
+        media_count(three_moth_df ,selected_categories,selected_media)
         st.header('各類別誘餌式標題比例')
-        clickbait_ratio_by_category = filtered_df.groupby('Category')['IsClickbait'].mean().reset_index()
-        fig_clickbait_category = px.bar(clickbait_ratio_by_category, x='Category', y='IsClickbait', title='各類別誘餌式標題比例')
-        fig_clickbait_category.update_layout(autosize=True, margin=dict(l=20, r=20, t=20, b=20))
-        st.plotly_chart(fig_clickbait_category, use_container_width=True)
+        media_clickbait(three_moth_df ,selected_categories,selected_media)  
 
-        # Time series chart for Emotional Titles
-        st.header('情緒性標題的時間序列圖')
-        time_series_emotional = filtered_df.groupby('Date')['emotional'].mean().reset_index()
-        time_series_emotional['emotional_smoothed'] = (time_series_emotional['emotional'].transform(lambda x: x.ewm(alpha=alpha, adjust=False).mean()))
-        fig_time_series_emotional = px.line(time_series_emotional, x='Date', y='emotional_smoothed', title='情緒性標題的時間趨勢')
-        fig_time_series_emotional.update_layout(autosize=True, margin=dict(l=20, r=20, t=20, b=20))
-        st.plotly_chart(fig_time_series_emotional, use_container_width=True)
-
-        # Bar chart for Interrogative Titles by Category
-        st.header('詢問性標題的長條圖')
-        interrogative_titles_by_category = filtered_df.groupby('Category')['interrogative'].mean().reset_index()
-        fig_interrogative_category = px.bar(interrogative_titles_by_category, x='Category', y='interrogative', title='各類別詢問性標題比例')
-        fig_interrogative_category.update_layout(autosize=True, margin=dict(l=20, r=20, t=20, b=20))
-        st.plotly_chart(fig_interrogative_category, use_container_width=True)
     with tab2:
         st.header('時間序列圖')
         MediaTimePlot(filtered_df, selected_media)
