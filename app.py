@@ -50,7 +50,7 @@ three_moth_df = GetProcessedData("panel_data_three_month.csv")
 
 
 #pingju's
-def  media_count(df,selected_Categories,selected_Media):
+def media_count(df,selected_Categories,selected_Media):
     df_filtered = df[df['Press'].isin(selected_Media)]
     df_filtered = df_filtered[df_filtered['Category'].isin(selected_Categories)]
     df_filtered["Mean"] = df_filtered["IsClickbait"] / df_filtered["Count_News"]
@@ -59,7 +59,7 @@ def  media_count(df,selected_Categories,selected_Media):
     # 在 Streamlit 上顯示圖表
     st.plotly_chart(fig_clickbait_category, use_container_width=True)
 
-def  media_clickbait(df,selected_Categories,selected_Media):
+def media_clickbait(df,selected_Categories,selected_Media):
     df_filtered = df[df['Press'].isin(selected_Media)]
     df_filtered = df_filtered[df_filtered['Category'].isin(selected_Categories)]
     df_filtered["Mean"] = df_filtered["IsClickbait"] / df_filtered["Count_News"]
@@ -69,6 +69,37 @@ def  media_clickbait(df,selected_Categories,selected_Media):
     fig_clickbait_category.update_layout(autosize=True)
     # 在 Streamlit 上顯示圖表
     st.plotly_chart(fig_clickbait_category, use_container_width=True)
+
+def category_bait_type(df,selected_Categories,selected_Bait):
+    columns_to_aggregate = ["Count_News",'IsClickbait','forward-referencing', 'emotional', 'interrogative', 'surprise', 'ellipsis', 'list', 'how_to', 'interjection', 'spillthebeans', 'gossip', 'ending_words', 'netizen', 'exaggerated', 'uncertainty']
+    aggregated_data = df.groupby(['Category'])[columns_to_aggregate].sum().reset_index()
+
+    df_melted = aggregated_data.melt(id_vars=['Category', 'Count_News', 'IsClickbait'], value_vars=df.columns[4:], var_name='Method', value_name='Method_Count')
+    # Calculate the method percentage of the total news count
+    df_melted['Method_Percentage'] = (df_melted['Method_Count'] / df_melted['Count_News'])
+
+    # Create the scatter plot using Plotly Express
+    fig = px.scatter(df_melted, x='Category', y='Method_Percentage',size='Method_Percentage',color='Method', color_discrete_map=bait_color_map,
+                    hover_data=['IsClickbait', 'Method_Count'], title='Method Percentage by Category')
+
+    top_methods = df_melted.groupby('Category').apply(lambda x: x.nlargest(3, 'Method_Percentage')).reset_index(drop=True)
+    for i in range(len(top_methods)):
+        if (i+1)%3 ==1:y = -25
+        elif (i+1)%3 ==2:y = -15
+        else:y =5
+        fig.add_annotation(
+            x=top_methods.iloc[i]['Category'],
+            y=top_methods.iloc[i]['Method_Percentage'],
+            text=top_methods.iloc[i]['Method'],
+            showarrow=True,
+            arrowhead=0,
+            ax=40,
+            ay=y
+        )
+
+    fig.update_layout(autosize=True)
+    # 在 Streamlit 上顯示圖表
+    st.plotly_chart(fig, use_container_width=True)
 
 # Ding & Iting: long term plot
 def MediaTimePlot(df, selected_Media):
@@ -145,9 +176,9 @@ def run():
 
     tab1, tab2, tab3 = st.tabs(["Pingru", "Ding", "Iting"])
     with tab1:
-        st.header('近三個月各類別新聞資料數')
+        st.header('各類別新聞資料數')
         media_count(three_moth_df ,selected_categories,selected_media)
-        st.header('近三個月各類別誘餌式標題比例')
+        st.header('各類別誘餌式標題比例')
         media_clickbait(three_moth_df ,selected_categories,selected_media)
 
     with tab2:
