@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import date
 import numpy as np
+from is_clickbait import is_clickbait
 
 # 全域變數測試
 # 因為會需要用到map，所以直接打出媒體，而非每次計算
@@ -18,6 +19,21 @@ bait_options = ['forward-referencing','emotional','interrogative','surprise','el
 bait_colors = media_colors + ['#D94DFF', '#FFDAB9']
 bait_color_map = dict(zip(bait_options, bait_colors))
 alpha = 0.4 #移動平均最新資料的權重
+criteria_list = [
+        "前項指涉：(代名詞)'他', '他們', '你', '這'…",
+        "問題式：'?!', '!', '?'",
+        "刪節號：'......'",
+        "how to：'如何', '該怎麼做', '該如何'",
+        "感嘆詞：'嗯', '哎', '咦', '啊', '唉', '呦'",
+        "爆料文體：'曝光', '自爆', '爆料', '再爆'",
+        "群眾效果：包含'網'字(ex:「網」瘋傳)",
+        "情緒性用詞：'瘋', '激', '慘', '哭', '酸', '諷', '飆罵', '怒批', '打臉'…",
+        "驚奇：'居然', '竟然', '竟', '甚至', '沒想到', '驚'",
+        "清單式：'十個', '三招'…",
+        "八卦文體：'正妹', '老司機', '性感', '嫩', '型男'…",
+        "句尾詞：'了'",
+        "誇大：'最', '太', '狠', '極其', '非常', '神', '狂', '超'…",
+        "不確定性：'傳', '瘋傳', '轉傳', '網傳', '誤傳', '疑', '恐'"]
 
 st.set_page_config(
     page_title="新聞標題分析: Clickbait",
@@ -194,7 +210,26 @@ def run():
         with st.expander('更多分析'):
             st.markdown("僅顯示從2018開始有資料的媒體")
     with tab3:
-        st.write('test')
+        st.header('判斷文字是否為釣餌式標題')
+        user_input = st.text_area("請輸入新聞標題文字:")
+        if st.button("Detect"):
+            # Call the function to determine if it's clickbait
+            result = is_clickbait(user_input)
+
+            # Display the result based on the return value
+            if result == 1:
+                detect_result = '<p style="font-family:sans-serif; color:#FF6600; font-size: 22px;">可能是釣餌式標題</p>'
+                st.markdown(detect_result, unsafe_allow_html=True)
+            else:
+                detect_result = '<p style="font-family:sans-serif; color:#FFA500; font-size: 22px;">應不是釣餌式標題</p>'
+                st.markdown(detect_result, unsafe_allow_html=True)
+
+        st.header("判斷是否為釣餌式標題之方法")
+        for i, criterion in enumerate(criteria_list, start=1):
+            st.write(f"{i}. {criterion}")
+        criterion_note = '<p style="font-family:sans-serif; color:#FFA500; font-size: 18px;">根據論文研究結果1~7點較具判斷力，因此若符合一項即判定為釣餌式標題。而總共符合兩項以上特徵，我們也將判定為釣餌式標題。</p>'
+        st.markdown(criterion_note, unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     run()
