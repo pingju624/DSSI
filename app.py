@@ -64,7 +64,6 @@ def SelectDate(df, start_date, end_date):
 df = GetProcessedData('processed_data.csv')
 three_moth_df = GetProcessedData("panel_data_three_month.csv")
 
-
 #pingju's
 def media_count(df,selected_Categories,selected_Media):
     df_filtered = df[df['Press'].isin(selected_Media)]
@@ -87,13 +86,15 @@ def media_clickbait(df,selected_Categories,selected_Media):
     st.plotly_chart(fig_clickbait_category, use_container_width=True)
 
 def category_bait_type(df,selected_Categories,selected_Bait):
-    columns_to_aggregate = ["Count_News",'IsClickbait','forward-referencing', 'emotional', 'interrogative', 'surprise', 'ellipsis', 'list', 'how_to', 'interjection', 'spillthebeans', 'gossip', 'ending_words', 'netizen', 'exaggerated', 'uncertainty']
-    aggregated_data = df.groupby(['Category'])[columns_to_aggregate].sum().reset_index()
+    columns_to_aggregate = ["Count_News",'IsClickbait',*selected_Bait]
 
-    df_melted = aggregated_data.melt(id_vars=['Category', 'Count_News', 'IsClickbait'], value_vars=df.columns[4:], var_name='Method', value_name='Method_Count')
+    aggregated_data = df.groupby(['Category'])[columns_to_aggregate].sum().reset_index()
+    df_melted = aggregated_data.melt(id_vars=['Category', 'Count_News', 'IsClickbait'], value_vars=selected_Bait, var_name='Method', value_name='Method_Count')
     # Calculate the method percentage of the total news count
     df_melted['Method_Percentage'] = (df_melted['Method_Count'] / df_melted['Count_News'])
-
+    
+    df_melted = df_melted[df_melted['Category'].isin(selected_Categories)]
+    
     # Create the scatter plot using Plotly Express
     fig = px.scatter(df_melted, x='Category', y='Method_Percentage',size='Method_Percentage',color='Method', color_discrete_map=bait_color_map,
                     hover_data=['IsClickbait', 'Method_Count'], title='Method Percentage by Category')
@@ -128,7 +129,7 @@ def MediaTimePlot(df, selected_Media):
     df_filtered['SmoothedClickbait'] = (df_filtered.groupby('Press')['IsClickbait'].transform(lambda x: x.ewm(alpha=alpha, adjust=False).mean()))
     fig = px.line(df_filtered, x='MonthYear', y='SmoothedClickbait',
                   color='Press', color_discrete_map=media_color_map, title='各媒體誘餌式標題比例')
-    fig.update_layout(xaxis_title='Time (Monthly)',yaxis_title='Clickbait Ratio', legend_title='新聞媒體')
+    fig.update_layout(xaxis_title='Time (Monthly)',yaxis_title='Clickbait Ratio', legend_title='新聞媒體',autosize=True)
     # Customize the layout
     st.plotly_chart(fig, use_container_width=True)
 
@@ -145,7 +146,7 @@ def CategoryTimePlot(df, selected_categories):
     df_filtered['SmoothedClickbait'] = (df_filtered.groupby('Category')['IsClickbait'].transform(lambda x: x.ewm(alpha=alpha, adjust=False).mean()))
     fig = px.line(df_filtered, x='MonthYear', y='SmoothedClickbait',
                   color='Category', color_discrete_map=category_color_map, title='各類別新聞誘餌式比例')
-    fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Clickbait Ratio', legend_title='新聞類別')
+    fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Clickbait Ratio', legend_title='新聞類別',autosize=True)
     # Add a shaded region using add_shape
     if st.checkbox('顯示大選期間'):
         st.write(', '.join(['2018-07-24','2018-11-30','2019-09-11','2020-01-31','2022-07-26','2022-11-30']))
@@ -171,7 +172,7 @@ def BaitMethodTimePlot(df, selected_baits):
 
     fig = px.line(df_melted, x='MonthYear', y='SmoothedClickbait',
                   color='BaitType', color_discrete_map=bait_color_map, title='各誘餌式方法占全部新聞比例')
-    fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Bait Type Ratio', legend_title='釣魚方法')
+    fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Bait Type Ratio', legend_title='釣魚方法',autosize=True)
     st.plotly_chart(fig, use_container_width=True)
 
 def run():
@@ -196,6 +197,8 @@ def run():
         media_count(three_moth_df ,selected_categories,selected_media)
         st.header('各類別誘餌式標題比例')
         media_clickbait(three_moth_df ,selected_categories,selected_media)
+        st.header('各誘餌方法佔類別比例')
+        category_bait_type(three_moth_df,selected_categories,selected_bait)
 
     with tab2:
         st.header('時間序列圖')
