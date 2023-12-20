@@ -79,7 +79,7 @@ def bait_count(df,selected_Media):
     df_group = df_filtered.groupby(["Press"]).sum().reset_index()
     df_group["Mean"] = df_group["IsClickbait"] / df_group["Count_News"]
     fig_clickbait_category = px.bar(df_group, x='Press', y='Mean', color='Mean', title='媒體間釣餌式標題比例',labels={'Mean':'Click-bait ratio'},barmode='group',hover_data={'Mean':':.2f'})
-    fig_clickbait_category.update_traces(width=1)
+    fig_clickbait_category.update_traces(width=0.7)
     fig_clickbait_category.update_layout(autosize=True)
     # 在 Streamlit 上顯示圖表
     st.plotly_chart(fig_clickbait_category, use_container_width=True)
