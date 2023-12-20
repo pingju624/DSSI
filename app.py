@@ -65,7 +65,7 @@ df = GetProcessedData('processed_data.csv')
 three_moth_df = GetProcessedData("panel_data_three_month.csv")
 
 #pingju's
-def media_count(df,selected_Categories,selected_Media):
+def  media_count(df,selected_Categories,selected_Media):
     df_filtered = df[df['Press'].isin(selected_Media)]
     df_filtered = df_filtered[df_filtered['Category'].isin(selected_Categories)]
     df_filtered["Mean"] = df_filtered["IsClickbait"] / df_filtered["Count_News"]
@@ -74,17 +74,27 @@ def media_count(df,selected_Categories,selected_Media):
     # 在 Streamlit 上顯示圖表
     st.plotly_chart(fig_clickbait_category, use_container_width=True)
 
-def media_clickbait(df,selected_Categories,selected_Media):
+def bait_count(df,selected_Media):
+    df_filtered = df[df['Press'].isin(selected_Media)]
+    df_group = df_filtered.groupby(["Press"]).sum().reset_index()
+    df_group["Mean"] = df_group["IsClickbait"] / df_group["Count_News"]
+    fig_clickbait_category = px.bar(df_group, x='Press', y='Mean', color='Mean', title='媒體間釣餌式標題比例',labels={'Mean':'Click-bait ratio'},barmode='group',hover_data={'Mean':':.2f'})
+    fig_clickbait_category.update_traces(width=1)
+    fig_clickbait_category.update_layout(autosize=True)
+    # 在 Streamlit 上顯示圖表
+    st.plotly_chart(fig_clickbait_category, use_container_width=True)
+    
+def  media_clickbait(df,selected_Categories,selected_Media):
     df_filtered = df[df['Press'].isin(selected_Media)]
     df_filtered = df_filtered[df_filtered['Category'].isin(selected_Categories)]
     df_filtered["Mean"] = df_filtered["IsClickbait"] / df_filtered["Count_News"]
     # df_filtered['Category'] = pd.Categorical(df_filtered['Category'], categories=category_order, ordered=True)
     # fig_clickbait_category = px.bar(df_filtered, x='Press', y='Mean', color='Category',color_discrete_map=category_color_map, title='各類別誘餌式標題比例',labels={'Mean':'Click bait ratio'},barmode='group')
-    fig_clickbait_category = px.bar(df_filtered, x='Press', y='Mean', color='Category', title='各類別誘餌式標題比例',labels={'Mean':'Click bait ratio'},barmode='group')
+    fig_clickbait_category = px.bar(df_filtered, x='Press', y='Mean', color='Category', title='各類別誘餌式標題比例',labels={'Mean':'Click bait ratio'},barmode='group',hover_data={'Mean':':.2f'})
     fig_clickbait_category.update_layout(autosize=True)
     # 在 Streamlit 上顯示圖表
     st.plotly_chart(fig_clickbait_category, use_container_width=True)
-
+    
 def category_bait_type(df,selected_Categories,selected_Bait):
     columns_to_aggregate = ["Count_News",'IsClickbait',*selected_Bait]
 
@@ -97,7 +107,7 @@ def category_bait_type(df,selected_Categories,selected_Bait):
     
     # Create the scatter plot using Plotly Express
     fig = px.scatter(df_melted, x='Category', y='Method_Percentage',size='Method_Percentage',color='Method', color_discrete_map=bait_color_map,
-                    hover_data=['IsClickbait', 'Method_Count'], title='Method Percentage by Category')
+                    hover_data={'Method_Percentage':':.2f'}, title='Method Percentage by Category')
 
     top_methods = df_melted.groupby('Category').apply(lambda x: x.nlargest(3, 'Method_Percentage')).reset_index(drop=True)
     for i in range(len(top_methods)):
@@ -195,6 +205,8 @@ def run():
     with tab1:
         st.header('各類別新聞資料數')
         media_count(three_moth_df ,selected_categories,selected_media)
+        st.header('媒體間釣餌式標題比例')
+        bait_count(three_moth_df ,selected_media)
         st.header('各類別誘餌式標題比例')
         media_clickbait(three_moth_df ,selected_categories,selected_media)
         st.header('各誘餌方法佔類別比例')
