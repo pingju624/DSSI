@@ -16,22 +16,18 @@ def criterion_2(title):
         return 1
     else:
         return 0
-
+    
 def criterion_3(title):
-     # 如果標題中包含 '?!'，直接返回 True
-    if re.search(r'\?\!', title):
-        return 1
-    # 如果標題中包含 '?', '!', '？' 或 '！' 中的任兩個，返回 True
-    if len(re.findall(r'[?!]', title)) >= 2:
+    # Check if the title contains two or more of the specified characters ('!', '?', '！', '？')
+    if len(re.findall(r'[!？！?]', title)) >= 2:
         return 1
     else:
         return 0
     
 def criterion_4(title):
-    target_characters = r'\b(?!驚天|驚訝|辯才|人才|步步驚心|專才|育才|武嚇|才是|恐嚇)\b(居然|竟然|竟|甚至|甚而|反而|反倒|原來|未料|不料|想不到|沒想到|才|卻|驚)'
-
+    # target_characters = r'\b(?!驚天|驚訝|辯才|人才|步步驚心|專才|育才|武嚇|才是|恐嚇)\b(居然|竟然|竟|甚至|甚而|反而|反倒|原來|未料|不料|想不到|沒想到|才|卻|驚)'
+    target_characters = r'(?!驚天|驚訝|辯才|人才|步步驚心|專才|育才|武嚇|才是|恐嚇)(居然|竟然|竟|甚至|甚而|反而|反倒|原來|未料|不料|想不到|沒想到|才|卻|驚)'
     match = re.search(target_characters, title)
-
     if match:
         return 1
     else:
@@ -146,7 +142,7 @@ def criterion_13(title):
 
 # 不確定性
 def criterion_14(title):
-    target_characters = r'\b(?!宣傳|傳統|傳奇|傳遞|頻傳|銘傳|傳訊|傳喚|傳承|遠傳|傳記|驚恐|恐嚇|恐怖|唯恐天下不亂|質疑|遲疑|疑點|疑惑)\b(傳|瘋傳|轉傳|網傳|誤傳|疑|恐)'
+    target_characters = r'(?!宣傳|傳統|傳奇|傳遞|頻傳|銘傳|傳訊|傳喚|傳承|遠傳|傳記|驚恐|恐嚇|恐怖|唯恐天下不亂|質疑|遲疑|疑點|疑惑)(傳|瘋傳|轉傳|網傳|誤傳|疑|恐)'
 
     match = re.search(target_characters, title)
 
@@ -154,10 +150,18 @@ def criterion_14(title):
         return 1
     else:
         return 0
+#微疑問
+def criterion_15(title):
+    # Check if the title contains two or more of the specified characters ('!', '?', '！', '？')
+    if len(re.findall(r'[!？！?]', title)) >= 1:
+        return 1
+    else:
+        return 0
     
 # 定義誘餌式標題判斷函數
 def is_clickbait(title):
-    criteria_results = [criterion_1(title), criterion_2(title), criterion_3(title), criterion_4(title), criterion_5(title), criterion_6(title), criterion_7(title), criterion_8(title), criterion_9(title), criterion_10(title), criterion_11(title), criterion_12(title), criterion_13(title), criterion_14(title)]
+    criteria_results = [criterion_1(title), criterion_2(title), criterion_3(title), criterion_4(title), criterion_5(title), criterion_6(title), criterion_7(title), criterion_8(title), criterion_9(title), criterion_10(title), criterion_11(title), criterion_12(title), criterion_13(title), criterion_14(title),criterion_15(title)]
+    print(criteria_results)
     if criterion_1(title) or criterion_3(title) or criterion_5(title) or criterion_7(title) or criterion_8(title) or criterion_9(title) or criterion_12(title) == 1:
         return 1
     elif sum(criteria_results) >= 2:
