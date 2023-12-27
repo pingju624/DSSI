@@ -61,8 +61,8 @@ def SelectDate(df, start_date, end_date):
     return df[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
 
 # Load the data
-df = GetProcessedData('processed_data.csv')
 three_moth_df = GetProcessedData("panel_data_three_month.csv")
+df = GetProcessedData("panel_data_weekly.csv")
 
 #pingju's
 def  media_count(df,selected_Categories,selected_Media):
@@ -130,30 +130,31 @@ def category_bait_type(df,selected_Categories,selected_Bait):
 
 # Ding & Iting: long term plot
 def MediaTimePlot(df, selected_Media):
-    # Use Global Variables: media_color_map, alpha
-
-    df_filtered = df[df['Press'].isin(selected_Media)]
+    From2018 = ['ETToday', '今日新聞', 'Storm Media', 'NewYorkTimes', 'NewsLens', 'TVBS', '報導者']
+    df_filtered = df[df['Press'].isin(From2018)]
+    df_filtered = df_filtered[df_filtered['Press'].isin(selected_Media)]
     df_filtered['MonthYear'] = df_filtered['Date'].astype(str).str[:7]
-    df_filtered = df_filtered.groupby(['Press', 'MonthYear']).agg({'IsClickbait': 'mean'}).reset_index()
+    df_filtered = df_filtered.groupby(['Press', 'MonthYear']).agg({'Count_News': 'sum','IsClickbait': 'sum'}).reset_index()
+    df_filtered["ratio"] = df_filtered["IsClickbait"]/df_filtered["Count_News"]
     # 計算每個新聞媒體每個月的平均值
-    df_filtered['SmoothedClickbait'] = (df_filtered.groupby('Press')['IsClickbait'].transform(lambda x: x.ewm(alpha=alpha, adjust=False).mean()))
+
+    df_filtered['SmoothedClickbait'] = df_filtered.groupby('Press')['ratio'].transform(lambda x: x.rolling(window=4).mean())
     fig = px.line(df_filtered, x='MonthYear', y='SmoothedClickbait',
                   color='Press', color_discrete_map=media_color_map, title='各媒體誘餌式標題比例')
+    df_filtered = df[df['Press'].isin(selected_Media)]
     fig.update_layout(xaxis_title='Time (Monthly)',yaxis_title='Clickbait Ratio', legend_title='新聞媒體',autosize=True)
     # Customize the layout
     st.plotly_chart(fig, use_container_width=True)
 
-def CategoryTimePlot(df, selected_categories):
-    # Use Global Variables: category_color_map, alpha
-    # 篩選從2018開始有資料的媒體
-    From2018 = ['ETToday', '今日新聞', 'Storm Media', 'NewYorkTimes', 'NewsLens', 'TVBS', '報導者']
 
+def CategoryTimePlot(df, selected_categories):
+    From2018 = ['ETToday', '今日新聞', 'Storm Media', 'NewYorkTimes', 'NewsLens', 'TVBS', '報導者']
     df_filtered = df[df['Press'].isin(From2018)]
     df_filtered = df_filtered[df_filtered['Category'].isin(selected_categories)]
-    # 新增"年-月"的列，以類別&月份分組並平均，每周的權重都一樣，不管資料數
     df_filtered['MonthYear'] = df_filtered['Date'].astype(str).str[:7]
-    df_filtered = df_filtered.groupby(['Category', 'MonthYear']).agg({'IsClickbait': 'mean'}).reset_index()
-    df_filtered['SmoothedClickbait'] = (df_filtered.groupby('Category')['IsClickbait'].transform(lambda x: x.ewm(alpha=alpha, adjust=False).mean()))
+    df_filtered = df_filtered.groupby(['Category', 'MonthYear']).agg({'Count_News': 'sum','IsClickbait': 'sum'}).reset_index()
+    df_filtered["ratio"] = df_filtered["IsClickbait"]/df_filtered["Count_News"]
+    df_filtered['SmoothedClickbait'] = (df_filtered.groupby('Category')['ratio'].transform(lambda x: x.ewm(alpha=alpha, adjust=False).mean()))
     fig = px.line(df_filtered, x='MonthYear', y='SmoothedClickbait',
                   color='Category', color_discrete_map=category_color_map, title='各類別新聞誘餌式比例')
     fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Clickbait Ratio', legend_title='新聞類別',autosize=True)
@@ -168,23 +169,26 @@ def CategoryTimePlot(df, selected_categories):
     st.plotly_chart(fig, use_container_width=True)
 
 def BaitMethodTimePlot(df, selected_baits):
-    # Use Global Variables: bait_color_map, alpha
-    # 篩選從2018開始有資料的媒體
     From2018 = ['ETToday', '今日新聞', 'Storm Media', 'NewYorkTimes', 'NewsLens', 'TVBS', '報導者']
 
     df_filtered = df[df['Press'].isin(From2018)]
     # 新增"年-月"的列，以月份分組並平均，每周的權重都一樣，不管資料數
     df_filtered['MonthYear'] = df['Date'].astype(str).str[:7]
-    df_filtered = df_filtered.groupby('MonthYear')[selected_baits].mean().reset_index()
+    li = ["Count_News"]+selected_baits
+    df_filtered = df_filtered.groupby('MonthYear')[li].sum().reset_index()
+    for category in selected_baits:
+        df_filtered[category] = df_filtered[category]/df_filtered["Count_News"]
+    print(df_filtered)
     # 處理資料以對"時間-BaitType"做圖
     df_melted = pd.melt(df_filtered, id_vars=['MonthYear'], value_vars=selected_baits, var_name='BaitType', value_name='BaitRatio')
-    df_melted['SmoothedClickbait'] = (df_melted.groupby('BaitType')['BaitRatio'].transform(lambda x: x.ewm(alpha=alpha, adjust=False).mean()))
-
+    print(df_melted)
+    df_melted['SmoothedClickbait'] = df_melted.groupby('BaitType')['BaitRatio'].transform(lambda x: x.rolling(window=4).mean())
+    
     fig = px.line(df_melted, x='MonthYear', y='SmoothedClickbait',
                   color='BaitType', color_discrete_map=bait_color_map, title='各誘餌式方法占全部新聞比例')
     fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Bait Type Ratio', legend_title='釣魚方法',autosize=True)
     st.plotly_chart(fig, use_container_width=True)
-
+    
 def run():
     # Sidebar filters
     with st.sidebar:
@@ -201,7 +205,7 @@ def run():
     if st.checkbox('顯示篩選後的數據'):
         st.write(filtered_df)
 
-    tab1, tab2, tab3 = st.tabs(["Pingru", "Ding", "Iting"])
+    tab1, tab2, tab3 = st.tabs(["三個月分析", "長期分析", "釣餌式標題識別器"])
     with tab1:
         st.header('各類別新聞資料數')
         media_count(three_moth_df ,selected_categories,selected_media)
