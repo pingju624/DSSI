@@ -220,7 +220,8 @@ def run():
             st.markdown("情緒性用詞(emotional)與誇大用詞(exaggerate)都排名前段， 表示各類新聞皆偏愛將這兩類的字詞放在標題中\n\n- 在釣餌式標題比例最高的娛樂類新聞中，前三高的誘餌方法 為情緒性、誇大與結尾「了」")
         
     with tab2:
-        st.header('時間序列圖')
+        st.subheader('時間序列分析')
+        st.markdown("我們選取資料完整的做2018~2023的時間趨勢分析（ ETToday、NewYorkTimes、NewsLens、Storm Media、今日新聞、報導者）")
         MediaTimePlot(filtered_df, selected_media)
         with st.expander('## **我們的觀點：**'):
             st.markdown("在這份資料中，我們發現 **Storm Media** 的釣餌式文章最多。")
