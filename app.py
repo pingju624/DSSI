@@ -207,33 +207,28 @@ def run():
     tab1, tab2, tab3 = st.tabs(["三個月分析", "長期分析", "釣餌式標題識別器"])
     with tab1:
         media_count(three_moth_df ,selected_categories,selected_media)
-        with st.expander('我們的觀點：'):
-            st.markdown("## **Insight**")
+        with st.expander('## 我們的觀點：'):
             st.markdown("這是我們搜集到的資料數量，娛樂類、政治類均非常多")
         bait_count(three_moth_df ,selected_media)
-        with st.expander('我們的觀點：'):
-            st.markdown("## **Insight**")
+        with st.expander('## 我們的觀點：'):
             st.markdown("我們發現有政黨傾向的媒體以及以網路娛樂媒體起家的有較高的釣餌式比例\n\n 報導者近三個月內的新聞比數非常少，可能不具備參考性")
         media_clickbait(three_moth_df ,selected_categories,selected_media)
-        with st.expander('我們的觀點：'):
-            st.markdown("## **Insight**")
+        with st.expander('## 我們的觀點：'):
             st.markdown("- 多數媒體在娛樂類新聞的釣餌式比例最高、在財經類新 聞的釣餌式比例最低\n\n- 我們預期台灣政治類新聞的釣餌式比例也會偏高，但資 料顯示並沒有特別高於其他類別\n\n- 單獨看政治類新聞的釣餌式標題比例。我們發現國內民 眾普遍認為政治傾向強烈的兩家媒體，其釣餌式標題比 例排名在第二與第三名 (排除掉報導者後)")
         category_bait_type(three_moth_df,selected_categories,selected_bait)
-        with st.expander('我們的觀點：'):
-            st.markdown("## **Insight**")
+        with st.expander('## 我們的觀點：'):
             st.markdown("情緒性用詞(emotional)與誇大用詞(exaggerate)都排名前段， 表示各類新聞皆偏愛將這兩類的字詞放在標題中\n\n- 在釣餌式標題比例最高的娛樂類新聞中，前三高的誘餌方法 為情緒性、誇大與結尾「了」")
         
     with tab2:
         st.header('時間序列圖')
         MediaTimePlot(filtered_df, selected_media)
-        with st.expander('我們的觀點：'):
-            st.markdown("## **Insight**")
+        with st.expander('## 我們的觀點：'):
             st.markdown("在這份資料中，我們發現 **Storm Media** 的釣餌式文章最多。")
         CategoryTimePlot(filtered_df, selected_categories)
-        with st.expander('我們的觀點：'):
+        with st.expander('## 我們的觀點：'):
             st.markdown("僅顯示從2018開始有資料的媒體")
         BaitMethodTimePlot(filtered_df, selected_bait)
-        with st.expander('我們的觀點：'):
+        with st.expander('## 我們的觀點：'):
             st.markdown("僅顯示從2018開始有資料的媒體")
     with tab3:
         st.header('判斷文字是否為釣餌式標題')
