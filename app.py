@@ -229,7 +229,7 @@ def run():
         st.markdown("我們選取資料完整的做2018~2023的時間趨勢分析（ ETToday、NewYorkTimes、NewsLens、Storm Media、今日新聞、報導者）")
         MediaTimePlot(filtered_df, selected_media)
         with st.expander('## **我們的觀點：**'):
-            st.markdown("- **風傳媒**的釣餌式新聞標題比例最高，為44%，但他的趨勢是最為明顯向下的\n\n- ，再來第二名則是 ETToday 的 38% 且幾乎在5年內沒有太大的變化，釣餌式標題比例最低的媒體為 New York Times")
+            st.markdown("- **風傳媒**的釣餌式新聞標題比例最高，為44%，但他的趨勢是最為明顯向下的\n\n- 再來第二名則是 ETToday 的 38% 且幾乎在5年內沒有太大的變化，釣餌式標題比例最低的媒體為 New York Times")
         CategoryTimePlot(filtered_df, selected_categories)
         with st.expander('## **我們的觀點：**'):
             st.markdown("- 「娛樂」類新聞的釣餌式標題比例高於其他類別，為 58%，「財經」類新聞則有最低比例的釣餌式標題，為 16%\n\n- 生活類和健康類新聞的釣餌式標題比例也較高，與預期結果相符；不同的是政治類新聞比例較預期低")
