@@ -160,7 +160,7 @@ def CategoryTimePlot(df, selected_categories):
     fig.update_layout(xaxis_title='Time (Monthly)', yaxis_title='Clickbait Ratio', legend_title='新聞類別',autosize=True)
     # Add a shaded region using add_shape
     if st.checkbox('顯示大選期間'):
-        st.write(', '.join(['2018-07-24','2018-11-30','2019-09-11','2020-01-31','2022-07-26','2022-11-30']))
+        # st.write(', '.join(['2018-07-24','2018-11-30','2019-09-11','2020-01-31','2022-07-26','2022-11-30']))
         for start, end in [('2018-07-24','2018-11-30'),('2019-09-11','2020-01-31'),('2022-07-26','2022-11-30')]:
             if pd.to_datetime(start) <= pd.to_datetime(df['Date'].min()):
                 continue
@@ -205,7 +205,8 @@ def run():
     if st.checkbox('顯示篩選後的數據'):
         st.write(filtered_df)
     
-    tab1, tab2, tab3 = st.tabs(["三個月分析", "長期分析", "釣餌式標題識別器"])
+    list_tab = ["三個月分析", "長期分析", "釣餌式標題識別器"])
+    tab1, tab2,tab3 = st.tabs([s.center(16,"\u2001") for s in list_tab])
     with tab1:
         media_count(three_moth_df ,selected_categories,selected_media)
         with st.expander('## **我們的觀點：**'):
