@@ -201,6 +201,7 @@ def run():
     st.title('台灣網路新聞釣餌式標題分析')
     # Filter data based on selections
     filtered_df = SelectDate(df, start_date, end_date)
+    st.markdown("由於各家媒體的網站皆不同，每間媒體我們能抓取到的最早日期都不太一致，所以我們最終決定\n\n   ➔ 統一取2023.08~2023.10，3個月內的資料做分析\n\n   ➔ 取資料完整的做2018~2023的時間趨勢分析（ ETToday、NewYorkTimes、NewsLens、Storm Media、今日新聞、報導者）")
     if st.checkbox('顯示篩選後的數據'):
         st.write(filtered_df)
     
