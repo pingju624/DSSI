@@ -205,7 +205,7 @@ def run():
     if st.checkbox('顯示篩選後的數據'):
         st.write(filtered_df)
     
-    list_tab = ["三個月分析", "長期分析", "釣餌式標題識別器"])
+    list_tab = ["三個月分析", "長期分析", "釣餌式標題識別器"]
     tab1, tab2,tab3 = st.tabs([s.center(16,"\u2001") for s in list_tab])
     with tab1:
         media_count(three_moth_df ,selected_categories,selected_media)
