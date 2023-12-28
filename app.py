@@ -201,7 +201,7 @@ def run():
     st.title('台灣網路新聞釣餌式標題分析')
     # Filter data based on selections
     filtered_df = SelectDate(df, start_date, end_date)
-    st.markdown("由於各家媒體的網站皆不同，每間媒體我們能抓取到的最早日期都不太一致，所以我們最終決定\n\n   ➔ 統一取2023.08~2023.10，3個月內的資料做分析\n\n   ➔ 取資料完整的做2018~2023的時間趨勢分析（ ETToday、NewYorkTimes、NewsLens、Storm Media、今日新聞、報導者）")
+    st.markdown("由於各家媒體的網站皆不同，每間媒體我們能抓取到的最早日期都不太一致，所以我們最終決定\n\n   ➔ 統一取2023.08~2023.10，用3個月內的資料做跨媒體的分析\n\n   ➔ 取資料完整的做2018~2023的時間趨勢分析（ ETToday、NewYorkTimes、NewsLens、Storm Media、今日新聞、報導者）")
     if st.checkbox('顯示篩選後的數據'):
         st.write(filtered_df)
     
@@ -221,20 +221,20 @@ def run():
         category_bait_type(three_moth_df,selected_categories,selected_bait)
         with st.expander('## **我們的觀點：**'):
             st.markdown("情緒性用詞(emotional)與誇大用詞(exaggerate)都排名前段， 表示各類新聞皆偏愛將這兩類的字詞放在標題中")
-            st.markdown("- 在釣餌式標題比例最高的娛樂類新聞中，前三高的誘餌方法為情緒性、誇大與結尾「了」\n\n   - Ex:「狠嗆媽媽太爛了 許老三挑戰小S九九乘法糗NG」(鏡新聞, 2022.03.17) 情緒性用詞為「嗆」，誇大用詞為「狠」，新聞標題存在結尾「了」字\n\n- 清單(list)為健康類常見的誘餌方式，這樣的標題無法提供有效資訊，需要點擊進去才能知道新聞的內容是什麼\n\n    - Ex:「脖子長腫塊怎麼辦？4類人小心甲狀腺結節 3症狀速就醫」(TVBS新聞網, 2023/12/19)")
+            st.markdown("- 在釣餌式標題比例最高的娛樂類新聞中，前三高的誘餌方法為情緒性、誇大與結尾「了」\n\n   - Ex:「狠嗆媽媽太爛了 許老三挑戰小S九九乘法糗NG」(鏡新聞, 2022.03.17)\n\n   情緒性用詞為「嗆」，誇大用詞為「狠」，新聞標題存在結尾「了」字\n\n- 清單(list)為健康類常見的誘餌方式，這樣的標題無法提供有效資訊，需要點擊進去才能知道新聞的內容是什麼\n\n    - Ex:「脖子長腫塊怎麼辦？4類人小心甲狀腺結節 3症狀速就醫」(TVBS新聞網, 2023/12/19)")
         
     with tab2:
         st.subheader('時間趨勢分析')
         st.markdown("我們選取資料完整的做2018~2023的時間趨勢分析（ ETToday、NewYorkTimes、NewsLens、Storm Media、今日新聞、報導者）")
         MediaTimePlot(filtered_df, selected_media)
         with st.expander('## **我們的觀點：**'):
-            st.markdown("在這份資料中，我們發現 **Storm Media** 的釣餌式文章最多。")
+            st.markdown("- **風傳媒**的釣餌式新聞標題比例最高，為44%，但他的趨勢是最為明顯向下的\n\n- ，再來第二名則是 ETToday 的 38% 且幾乎在5年內沒有太大的變化，釣餌式標題比例最低的媒體為 New York Times")
         CategoryTimePlot(filtered_df, selected_categories)
         with st.expander('## **我們的觀點：**'):
-            st.markdown("僅顯示從2018開始有資料的媒體")
+            st.markdown("- 「娛樂」類新聞的釣餌式標題比例高於其他類別，為 58%，「財經」類新聞則有最低比例的釣餌式標題，為 16%\n\n- 生活類和健康類新聞的釣餌式標題比例也較高，與預期結果相符；不同的是政治類新聞比例較預期低")
         BaitMethodTimePlot(filtered_df, selected_bait)
         with st.expander('## **我們的觀點：**'):
-            st.markdown("僅顯示從2018開始有資料的媒體")
+            st.markdown("前項指涉、強烈情緒字詞、誇大是所有的釣餌式標題樣本中最常被使用的手法")
     with tab3:
         st.header('判斷文字是否為釣餌式標題')
         user_input = st.text_area("請輸入新聞標題文字:")
